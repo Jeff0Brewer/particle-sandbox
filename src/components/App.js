@@ -14,10 +14,26 @@ const GlParticles = props => {
     const dpr = window.devicePixelRatio;
     const h = height * dpr, w = width * dpr * .5; 
     const buffer = new Float32Array(props.num * 7);
-    buffer[5] = 1;
-    buffer[6] = 50; //test
     const fsize = buffer.BYTES_PER_ELEMENT;
     const frameTime = 1000 / props.framerate;
+
+    let fn;
+    try {
+      fn = new Function(props.init);
+      for(let i = 0; i < props.num; i++){
+        const { pos, col, siz } = fn();
+        const off = i * 7;
+        buffer[off] = pos[0];
+        buffer[off + 1] = pos[1];
+        buffer[off + 2] = pos[2];
+        buffer[off + 3] = col[0];
+        buffer[off + 4] = col[1];
+        buffer[off + 5] = col[2];
+        buffer[off + 6] = siz;
+      }
+    } catch (err) {
+      console.log(err.message);
+    }
 
     const gl = glu.setupGl(canvasRef.current, shaders);
     glu.switchShader(0);
@@ -25,7 +41,7 @@ const GlParticles = props => {
     const projMat = new Mat4();
     const modelMat = new Mat4();
     viewMat.setCamera([0, 0, 1], [0, 0, 0], [0, 1, 0]);
-    projMat.setPerspective(90, w / h, .1, 100);
+    projMat.setPerspective(100, w / h, .1, 100);
     const uModelMat = gl.getUniformLocation(gl.program, 'uModelMat');
     gl.uniformMatrix4fv(uModelMat, false, modelMat.e);
     gl.uniformMatrix4fv(gl.getUniformLocation(gl.program, 'uViewMat'), false, viewMat.e);
@@ -48,10 +64,9 @@ const GlParticles = props => {
     gl.vertexAttribPointer(aSize, 1, gl.FLOAT, false, fsize * 7, fsize * 6)
     gl.enableVertexAttribArray(aSize)
 
-    let fn = null;
-    const params = ['i', 't', 'pos', 'col', 'siz'];
+    fn = null;
     try {
-      fn = new Function(...params, props.code);
+      fn = new Function('i', 't', 'pos', 'col', 'siz', props.update);
     } catch (err) {
       console.log(err.message);
     }
@@ -77,7 +92,7 @@ const GlParticles = props => {
       if(currTime - lastTime > frameTime){
         t += (currTime - lastTime)/1000;
         lastTime = currTime;
-        
+
         if(fn)
           update(t);
 
@@ -105,17 +120,25 @@ const GlParticles = props => {
 
 
 const App = () => {
-  const [code, setCode] = useState('return { pos, col, siz };');
-  const codeRef = useRef(null);
+  const initDefault = `let pos = [0, 0, 0], col = [1, 1, 1], siz = 3; \n\nreturn { pos, col, siz }; `;
+  const [init, setInit] = useState(initDefault);
+  const initRef = useRef(null);
+  
+  const updateDefault = `return { pos, col, siz };`;
+  const [update, setUpdate] = useState(updateDefault);
+  const updateRef = useRef(null);
+
 
   useEffect(() => {
-    codeRef.current.value = `return { pos, col, siz };`
+    initRef.current.value = initDefault;
+    updateRef.current.value = updateDefault;
   }, [])
 
   return (
     <main>
-      <textarea ref={codeRef} id='code' placeholder='Your code here' onChange={e => setCode(codeRef.current.value)}></textarea>
-      <GlParticles num={1000} framerate={60} code={code}/>  
+      <textarea ref={initRef} id='init-code' className='code-textbox' placeholder='Your init function here' onChange={e => setInit(initRef.current.value)}></textarea>
+      <textarea ref={updateRef} id='update-code' className='code-textbox' placeholder='Your update function here' onChange={e => setUpdate(updateRef.current.value)}></textarea>
+      <GlParticles num={1000} framerate={60} init={init} update={update}/>  
     </main>
   );
 }

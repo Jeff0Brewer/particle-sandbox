@@ -1,3 +1,7 @@
+*{
+  box-sizing: border-box;
+}
+
 html, body{
   background-color: #222;
   margin: 0;
@@ -7,12 +11,12 @@ main{
   height: 100vh;
   overflow: hidden;
   display: grid;
-  grid-template-areas: "a b";
+  grid-template-areas: "a b" "c b";
   grid-template-columns: 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
 }
 
-#code{
-  grid-area: a;
+.code-textbox{
   width: 100%;
   height: 100%;
   resize: none;
@@ -23,12 +27,22 @@ main{
   margin: none;
 }
 
-#code:focus{
+.code-textbox:focus{
   outline: none;
 }
 
-#code::placeholder{
+.code-textbox::placeholder{
   color: #ddd;
+}
+
+#init-code{
+  grid-area: a;
+  border: #000 solid;
+  border-width: 0 0 2px 0;
+}
+
+#update-code{
+  grid-area: c;
 }
 
 #gl{
