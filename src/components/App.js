@@ -20,9 +20,9 @@ const GlParticles = props => {
 
     let fn;
     try {
-      fn = new Function(props.init);
+      fn = new Function('i', props.init);
       for(let i = 0; i < props.num; i++){
-        const { pos, col, siz, vel } = fn();
+        const { pos, col, siz, vel } = fn(i);
         let off = i * 7;
         buffer[off] = pos[0];
         buffer[off + 1] = pos[1];
@@ -69,20 +69,20 @@ const GlParticles = props => {
     gl.vertexAttribPointer(aSize, 1, gl.FLOAT, false, fsize * 7, fsize * 6)
     gl.enableVertexAttribArray(aSize)
 
-    fn = null;
     try {
       fn = new Function('i', 't', 'pos', 'col', 'siz', 'vel', props.update);
     } catch (err) {
       console.log(err.message);
+      fn = null;
     }
 
     const update = t => {
       for(let i = 0; i < props.num; i++){
         let off = i*7;
         const {pos, col, siz, vel} = fn(i, t, buffer.slice(off, off + 3), buffer.slice(off + 3, off + 6), buffer[off + 6], vels.slice(i*3, i*3 + 3));
-        buffer[off + 0] = pos[0];
-        buffer[off + 1] = pos[1];        
-        buffer[off + 2] = pos[2];      
+        buffer[off + 0] = pos[0] + vel[0];
+        buffer[off + 1] = pos[1] + vel[1];        
+        buffer[off + 2] = pos[2] + vel[2];      
         buffer[off + 3] = col[0];      
         buffer[off + 4] = col[1];      
         buffer[off + 5] = col[2];      
@@ -129,13 +129,28 @@ const GlParticles = props => {
 
 
 const App = () => {
-  const initDefault = `let pos = [0, 0, 0];\nlet col = [1, 1, 1];\nlet siz = 3;\nlet vel = [0, 0, 0];\n\nreturn { pos, col, siz, vel };`;
+  const initDefault = `//params: i\n\nlet pos = [0, 0, 0];\nlet col = [1, 1, 1];\nlet siz = 3;\nlet vel = [0, 0, 0];\n\nreturn { pos, col, siz, vel };`;
   const [init, setInit] = useState(initDefault);
   const initRef = useRef(null);
   
   const updateDefault = `//params: i, t, pos, col, siz, vel\n\nreturn { pos, col, siz, vel };`;
   const [update, setUpdate] = useState(updateDefault);
   const updateRef = useRef(null);
+  const updateDelay = 2000;
+
+  let initTimeout = null;
+  const delayInit = () => {
+    if(initTimeout)
+      window.clearTimeout(initTimeout);
+    initTimeout = window.setTimeout(() => setInit(initRef.current.value), updateDelay);
+  }
+
+  let updateTimeout = null;
+  const delayUpdate = () => {
+    if(updateTimeout)
+      window.clearTimeout(updateTimeout);
+      updateTimeout = window.setTimeout(() => setUpdate(updateRef.current.value), updateDelay);
+  }
 
 
   useEffect(() => {
@@ -145,15 +160,10 @@ const App = () => {
 
   return (
     <main>
-      <textarea ref={initRef} id='init-code' className='code-textbox' placeholder='Your init function here'></textarea>
-      <div id='lower-code'>
-        <textarea ref={updateRef} className='code-textbox' placeholder='Your update function here'></textarea>
-        <button className='run-button'
-        onMouseUp={() => {
-          setInit(initRef.current.value);
-          setUpdate(updateRef.current.value);
-        }} >run ></button>
-      </div>
+      <textarea id='init-code' ref={initRef} className='code-textbox' placeholder='Your init function here'
+      onChange={() => delayInit()}></textarea>
+      <textarea id='update-code' ref={updateRef} className='code-textbox' placeholder='Your update function here'
+      onChange={() => delayUpdate()}></textarea>
       <GlParticles num={1000} framerate={60} init={init} update={update}/>  
     </main>
   );
