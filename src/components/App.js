@@ -129,42 +129,44 @@ const GlParticles = props => {
 
 
 const App = () => {
-  const initDefault = `//params: i\n\nlet pos = [0, 0, 0];\nlet col = [1, 1, 1];\nlet siz = 3;\nlet vel = [0, 0, 0];\n\nreturn { pos, col, siz, vel };`;
+  const initDefault = `//params: i\n\nlet pos = [0, 0, 0];\nlet col = [1, 1, 1];\nlet siz = 10;\nlet vel = [0, 0, 0];\n\nreturn { pos, col, siz, vel };`;
   const [init, setInit] = useState(initDefault);
   const initRef = useRef(null);
   
   const updateDefault = `//params: i, t, pos, col, siz, vel\n\nreturn { pos, col, siz, vel };`;
   const [update, setUpdate] = useState(updateDefault);
   const updateRef = useRef(null);
-  const updateDelay = 2000;
+
+  const runDelay = 3000;
 
   let initTimeout = null;
   const delayInit = () => {
     if(initTimeout)
       window.clearTimeout(initTimeout);
-    initTimeout = window.setTimeout(() => setInit(initRef.current.value), updateDelay);
+    initTimeout = window.setTimeout(() => setInit(initRef.current.value), runDelay);
   }
 
   let updateTimeout = null;
   const delayUpdate = () => {
     if(updateTimeout)
       window.clearTimeout(updateTimeout);
-      updateTimeout = window.setTimeout(() => setUpdate(updateRef.current.value), updateDelay);
+      updateTimeout = window.setTimeout(() => setUpdate(updateRef.current.value), runDelay);
   }
-
 
   useEffect(() => {
     initRef.current.value = initDefault;
     updateRef.current.value = updateDefault;
+    setInit(initDefault);
+    setUpdate(updateDefault);
   }, [])
 
   return (
     <main>
-      <textarea id='init-code' ref={initRef} className='code-textbox' placeholder='Your init function here'
+      <textarea id='init-code' ref={initRef} className='code-textbox' placeholder='Your init function here' spellCheck='false'
       onChange={() => delayInit()}></textarea>
-      <textarea id='update-code' ref={updateRef} className='code-textbox' placeholder='Your update function here'
+      <textarea id='update-code' ref={updateRef} className='code-textbox' placeholder='Your update function here' spellCheck='false'
       onChange={() => delayUpdate()}></textarea>
-      <GlParticles num={1000} framerate={60} init={init} update={update}/>  
+      <GlParticles num={1000} framerate={90} init={init} update={update}/>  
     </main>
   );
 }
