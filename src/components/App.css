@@ -1,0 +1,40 @@
+html, body{
+  background-color: #222;
+  margin: 0;
+}
+
+main{
+  height: 100vh;
+  overflow: hidden;
+  display: grid;
+  grid-template-areas: "a b";
+  grid-template-columns: 1fr 1fr;
+}
+
+#code{
+  grid-area: a;
+  width: 100%;
+  height: 100%;
+  resize: none;
+  background-color: #222;
+  color: #fff;
+  padding: 20px;
+  border: none;
+  margin: none;
+}
+
+#code:focus{
+  outline: none;
+}
+
+#code::placeholder{
+  color: #ddd;
+}
+
+#gl{
+  grid-area: b;
+  background-color: #000;
+  width: 100%;
+  height: 100%;
+  
+}
